@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>道草グルメ MICHIKUSA — 野趣溢れる逸品を、あなたへ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <div class="logo-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b8963e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="logo-title">MICHIKUSA</h1>
+        <p class="logo-subtitle">道草グルメ評論 — by AI Sommelier</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="hero-text">
+        道端に佇む、名もなき野草たち。<br>
+        その真価を、今こそ問う。
+      </p>
+    </section>
+
+    <section class="upload-section" id="uploadSection">
+      <div class="upload-area" id="dropZone">
+        <div class="upload-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+            <circle cx="12" cy="13" r="3"/>
+          </svg>
+        </div>
+        <p class="upload-label">野草の写真をここに</p>
+        <p class="upload-hint">タップして撮影 / 画像を選択</p>
+        <input type="file" id="fileInput" accept="image/*" capture="environment" hidden>
+        <button class="btn-upload" id="uploadBtn">道草を選ぶ</button>
+        <button class="btn-camera" id="cameraBtn">カメラで撮る</button>
+      </div>
+    </section>
+
+    <section class="preview-section" id="previewSection" hidden>
+      <div class="preview-container">
+        <img id="previewImage" alt="選択された野草">
+        <canvas id="analysisCanvas" hidden></canvas>
+      </div>
+
+      <!-- 植物非検出カード -->
+      <div class="rejection-card" id="rejectionCard" hidden>
+        <div class="rejection-icon">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#b8963e" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+        </div>
+        <h3 class="rejection-title" id="rejectionTitle">審査対象外</h3>
+        <p class="rejection-msg" id="rejectionMsg"></p>
+        <p class="rejection-detected" id="rejectionDetected"></p>
+      </div>
+
+      <!-- 分析中ローディング（JS で表示制御） -->
+      <div class="analysis-loading" id="analysisLoading" hidden>
+        <div class="analysis-bars" id="analysisBars"></div>
+        <p class="analysis-label">量子色彩解析中</p>
+        <p class="analysis-step" id="analysisStep"></p>
+      </div>
+
+      <div class="score-preview" id="scorePreview" hidden>
+        <h3 class="score-title">一次審査スコア</h3>
+        <div class="score-bars" id="scoreBars"></div>
+      </div>
+      <div class="btn-group" id="btnGroup" hidden>
+        <button class="btn-analyze" id="analyzeBtn">
+          <span>道草を食わせる</span>
+          <span class="btn-icon" id="btnIcon"></span>
+        </button>
+        <button class="btn-multi" id="multiAnalyzeBtn">
+          <span class="btn-multi-main">多視点審査</span>
+          <span class="btn-multi-sub">複数の専門家が評価</span>
+          <span class="btn-icon" id="btnMultiIcon"></span>
+        </button>
+      </div>
+      <button class="btn-reset" id="resetBtn">やり直す</button>
+    </section>
+
+    <!-- 多視点審査結果 -->
+    <section class="multi-result-section" id="multiResultSection" hidden>
+      <div class="persona-progress" id="personaProgress"></div>
+      <div class="persona-tabs" id="personaTabs" hidden></div>
+      <div class="persona-reviews" id="personaReviews"></div>
+      <button class="btn-reset btn-reset-bottom" id="resetBtn3">別の道草を審査する</button>
+    </section>
+
+    <section class="loading-section" id="loadingSection" hidden>
+      <div id="loadingSpinner" class="loading-spinner-wrap">
+        <div class="loading-spinner"></div>
+        <p class="loading-text" id="loadingText">グルメ審査員を召喚中...</p>
+      </div>
+      <div id="streamingPreview" class="streaming-preview" hidden></div>
+    </section>
+
+    <section class="result-section" id="resultSection" hidden>
+      <article class="review-card">
+        <div class="review-header">
+          <div class="review-image-wrap">
+            <img id="resultImage" alt="審査対象">
+            <div class="review-badge">MICHIKUSA REVIEW</div>
+          </div>
+          <div class="review-meta">
+            <div class="star-rating" id="starRating"></div>
+            <p class="review-tagline" id="reviewTagline"></p>
+          </div>
+        </div>
+
+        <div class="review-scores" id="reviewScores"></div>
+        <div class="review-body" id="reviewBody"></div>
+        <div class="review-pairing" id="reviewPairing"></div>
+        <div class="review-cooking" id="reviewCooking"></div>
+
+        <footer class="review-footer">
+          <p class="disclaimer">※このアプリは純粋なエンタメです。実際に野草を食べないでください。毒草の可能性があります。</p>
+          <button class="btn-share" id="shareBtn">この評価をシェア</button>
+        </footer>
+      </article>
+
+      <button class="btn-reset btn-reset-bottom" id="resetBtn2">別の道草を審査する</button>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>MICHIKUSA — 道草グルメ評論 AI</p>
+    <p class="site-disclaimer">※実際の野草・山菜の採取・摂取は専門家の指導のもとで行ってください。</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+# 🌿 MICHIKUSA — 道草グルメ評論 AI
+
+> 道端に佇む、名もなき野草たち。その真価を、今こそ問う。
+
+野草・雑草の写真を撮るだけで、**AI が本格グルメ評論を生成する**エンタメアプリ。
+ミシュランガイド風の星評価、ソムリエ風テイスティングノート、ありえない調理法提案まで、終始真剣なトーンで評価します。
+
+> ⚠️ **このアプリは純粋なエンタメです。実際に野草を食べないでください。**
+
+---
+
+## 機能
+
+- **カメラ撮影 / 画像アップロード** — スマホ・PC 両対応
+- **AI 植物認識** — TensorFlow.js MobileNet v2 で植物かどうかを判定（鉢植え・非植物は審査拒否）
+- **ML 画像解析スコアリング** — CIELab 色空間 + k-means++ クラスタリング + Sobel エッジ検出による 5 軸スコア算出
+  - 外見の気品 / シェフ熱望度 / 珍味感 / 道端感 / 食後の後悔予想（警戒色検出付き）
+- **AI グルメレビュー生成** — GLM-4.6V-Flash（ビジョンモデル）が画像を直接見て評価
+- **多視点審査モード** — 3 人の専門家が視点を変えて評価
+  - Pierre Dubois（パリ三つ星料理長）— フランス語 + 日本語訳
+  - 山田宗次郎（江戸天保年間の食通）— 候文・江戸言葉
+  - 李 文徳（東洋医学薬草研究家）— 文言漢文 + 日本語訳
+- **シェア機能** — 評価結果をクリップボードコピー or ネイティブシェア
+
+---
+
+## 技術スタック
+
+| レイヤー | 技術 |
+|---------|------|
+| フロントエンド | HTML / CSS / Vanilla JS（バンドラー不要） |
+| 植物認識 | TensorFlow.js + MobileNet v2 (CDN) |
+| 画像解析 | Canvas API、CIELab 変換、k-means++、Sobel フィルタ |
+| テキスト生成 | Zhipu AI GLM-4.6V-Flash（ビジョン）/ GLM-4.7-Flash（テキスト） |
+| デプロイ | 静的ファイルのみ（サーバー不要） |
+
+---
+
+## セットアップ
+
+### 1. リポジトリをクローン
+
+```bash
+git clone https://github.com/ganondorofu/eating-michikusa.git
+cd eating-michikusa
+```
+
+### 2. API キーを設定
+
+```bash
+cp config.example.js config.js
+```
+
+`config.js` を開き、Zhipu AI の API キーを設定してください。
+
+```js
+const API_KEY = "your-zhipu-ai-api-key-here";
+```
+
+API キーは [Zhipu AI コンソール](https://open.bigmodel.cn/usercenter/apikeys) から取得できます（無料枠あり）。
+
+### 3. 起動
+
+**方法 A: ファイルをブラウザで直接開く**（最も簡単）
+
+```
+index.html をブラウザにドラッグ＆ドロップ
+```
+
+**方法 B: ローカルサーバーで起動**（推奨 — カメラ API が使いやすい）
+
+```bash
+# Python
+python3 -m http.server 8080
+
+# Node.js
+npx serve .
+
+# どちらも http://localhost:8080 でアクセス
+```
+
+**方法 C: スマホからアクセス**（同一 LAN 内）
+
+```bash
+python3 -m http.server 8080
+# スマホから http://<PCのIPアドレス>:8080 にアクセス
+```
+
+---
+
+## 使い方
+
+1. 「道草を選ぶ」または「カメラで撮る」で野草の画像を用意
+2. AI が植物かどうかを自動判定（鉢植えや非植物は審査拒否）
+3. CIELab + k-means++ で 5 軸スコアを算出
+4. 「道草を食わせる」で単体レビュー / 「多視点審査」で 3 専門家による評価
+5. 結果をシェア
+
+---
+
+## ディレクトリ構成
+
+```
+eating-michikusa/
+├── index.html          # メイン HTML
+├── style.css           # スタイル
+├── app.js              # アプリロジック（画像解析 + API 呼び出し）
+├── config.example.js   # API キー設定テンプレート
+├── config.js           # API キー（.gitignore 対象・要自分で作成）
+├── .gitignore
+├── LICENSE             # MIT License
+└── README.md
+```
+
+---
+
+## 注意事項
+
+- 実際の野草・山菜の採取・摂取は専門家の指導のもとで行ってください
+- API キー（`config.js`）は絶対にコミットしないでください
+- GLM-4.6V-Flash は無料枠に流量制限があります。混雑時は自動リトライします
+
+---
+
+## ライセンス
+
+[MIT License](LICENSE)

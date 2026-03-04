@@ -1,0 +1,11 @@
+# API キー（絶対にコミットしないこと）
+config.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# エディタ
+.vscode/
+.idea/
+*.swp
