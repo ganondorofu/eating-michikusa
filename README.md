@@ -47,6 +47,12 @@ cd eating-michikusa
 
 ### 2. API キーを設定
 
+API キーは [Zhipu AI コンソール](https://open.bigmodel.cn/usercenter/apikeys) から取得できます（無料枠あり）。
+
+設定方法は3つあります（優先順位順）:
+
+#### 方法 A: config.js ファイル（推奨）
+
 ```bash
 cp config.example.js config.js
 ```
@@ -54,10 +60,32 @@ cp config.example.js config.js
 `config.js` を開き、Zhipu AI の API キーを設定してください。
 
 ```js
-const API_KEY = "your-zhipu-ai-api-key-here";
+let API_KEY = "your-zhipu-ai-api-key-here";
 ```
 
-API キーは [Zhipu AI コンソール](https://open.bigmodel.cn/usercenter/apikeys) から取得できます（無料枠あり）。
+#### 方法 B: URL パラメータ
+
+URL に直接 API キーを指定できます（開発・テスト用）:
+
+```
+http://localhost:8080/?api_key=your-zhipu-ai-api-key-here
+```
+
+⚠️ **注意**: URL パラメータはブラウザ履歴に残ります。本番環境では config.js を使用してください。
+
+#### 方法 C: localStorage（ブラウザ保存）
+
+ブラウザの開発者コンソールで以下を実行:
+
+```js
+localStorage.setItem('MICHIKUSA_API_KEY', 'your-zhipu-ai-api-key-here');
+```
+
+この方法で設定した API キーはブラウザに永続的に保存されます。削除する場合:
+
+```js
+localStorage.removeItem('MICHIKUSA_API_KEY');
+```
 
 ### 3. 起動
 
