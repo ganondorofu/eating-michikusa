@@ -38,20 +38,43 @@
 
 ## セットアップ
 
-### 1. リポジトリをクローン
+### クイックスタート: Vercel にデプロイ（推奨）
+
+最も簡単な方法は Vercel にデプロイすることです。環境変数で API キーを安全に管理できます。
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ganondorofu/eating-michikusa)
+
+1. 上のボタンをクリックして Vercel にデプロイ
+2. デプロイ後、Vercel ダッシュボードで **Settings** → **Environment Variables** に移動
+3. 以下の環境変数を追加:
+   - **Name**: `ZHIPU_API_KEY`
+   - **Value**: あなたの Zhipu AI API キー（[ここから取得](https://open.bigmodel.cn/usercenter/apikeys)）
+4. **Deployments** タブから最新のデプロイを **Redeploy** して環境変数を反映
+
+これで API キーが安全に設定され、誰にも見られることなく動作します 🎉
+
+---
+
+### ローカル開発セットアップ
+
+#### 1. リポジトリをクローン
 
 ```bash
 git clone https://github.com/ganondorofu/eating-michikusa.git
 cd eating-michikusa
 ```
 
-### 2. API キーを設定
+#### 2. API キーを設定
 
 API キーは [Zhipu AI コンソール](https://open.bigmodel.cn/usercenter/apikeys) から取得できます（無料枠あり）。
 
-設定方法は3つあります（優先順位順）:
+設定方法は4つあります（優先順位順）:
 
-#### 方法 A: config.js ファイル（推奨）
+##### 方法 A: 環境変数（Vercel デプロイ時）
+
+Vercel にデプロイする場合、環境変数 `ZHIPU_API_KEY` を設定すると、ビルド時に自動的に `config.js` が生成されます。
+
+##### 方法 B: config.js ファイル（ローカル開発推奨）
 
 ```bash
 cp config.example.js config.js
@@ -63,7 +86,7 @@ cp config.example.js config.js
 let API_KEY = "your-zhipu-ai-api-key-here";
 ```
 
-#### 方法 B: URL パラメータ
+##### 方法 C: URL パラメータ
 
 URL に直接 API キーを指定できます（開発・テスト用）:
 
@@ -71,9 +94,9 @@ URL に直接 API キーを指定できます（開発・テスト用）:
 http://localhost:8080/?api_key=your-zhipu-ai-api-key-here
 ```
 
-⚠️ **注意**: URL パラメータはブラウザ履歴に残ります。本番環境では config.js を使用してください。
+⚠️ **注意**: URL パラメータはブラウザ履歴に残ります。本番環境では環境変数または config.js を使用してください。
 
-#### 方法 C: localStorage（ブラウザ保存）
+##### 方法 D: localStorage（ブラウザ保存）
 
 ブラウザの開発者コンソールで以下を実行:
 
@@ -87,7 +110,7 @@ localStorage.setItem('MICHIKUSA_API_KEY', 'your-zhipu-ai-api-key-here');
 localStorage.removeItem('MICHIKUSA_API_KEY');
 ```
 
-### 3. 起動
+#### 3. 起動
 
 **方法 A: ファイルをブラウザで直接開く**（最も簡単）
 
@@ -135,6 +158,8 @@ eating-michikusa/
 ├── app.js              # アプリロジック（画像解析 + API 呼び出し）
 ├── config.example.js   # API キー設定テンプレート
 ├── config.js           # API キー（.gitignore 対象・要自分で作成）
+├── build.sh            # Vercel ビルドスクリプト（環境変数から config.js 生成）
+├── vercel.json         # Vercel デプロイ設定
 ├── .gitignore
 ├── LICENSE             # MIT License
 └── README.md
