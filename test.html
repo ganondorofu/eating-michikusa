@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MICHIKUSA Test Runner</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 10px;
+    }
+    .test-summary {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-suite {
+      background: white;
+      margin: 15px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .test-suite-header {
+      background: #34495e;
+      color: white;
+      padding: 15px;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    .test-case {
+      padding: 12px 20px;
+      border-bottom: 1px solid #ecf0f1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .test-case:last-child {
+      border-bottom: none;
+    }
+    .test-case.pass {
+      background: #d4edda;
+    }
+    .test-case.fail {
+      background: #f8d7da;
+    }
+    .test-status {
+      font-weight: bold;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    .test-status.pass {
+      background: #28a745;
+      color: white;
+    }
+    .test-status.fail {
+      background: #dc3545;
+      color: white;
+    }
+    .test-error {
+      margin-top: 8px;
+      padding: 10px;
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      font-family: monospace;
+      font-size: 0.9em;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .stats {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px;
+    }
+    .stat {
+      font-size: 1.2em;
+    }
+    .stat-label {
+      color: #7f8c8d;
+      margin-right: 8px;
+    }
+    .stat-value {
+      font-weight: bold;
+    }
+    .stat-value.pass {
+      color: #28a745;
+    }
+    .stat-value.fail {
+      color: #dc3545;
+    }
+    #run-tests {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.1em;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    #run-tests:hover {
+      background: #2980b9;
+    }
+    #run-tests:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌿 MICHIKUSA Test Suite</h1>
+  <button id="run-tests">Run All Tests</button>
+  <div class="test-summary" id="summary">
+    <h2>Test Summary</h2>
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-label">Total:</span>
+        <span class="stat-value" id="total-tests">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Passed:</span>
+        <span class="stat-value pass" id="passed-tests">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Failed:</span>
+        <span class="stat-value fail" id="failed-tests">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Duration:</span>
+        <span class="stat-value" id="duration">0ms</span>
+      </div>
+    </div>
+  </div>
+  <div id="test-results"></div>
+
+  <script type="module">
+    import { runAllTests } from './test/testRunner.js';
+
+    const button = document.getElementById('run-tests');
+    const resultsDiv = document.getElementById('test-results');
+    const totalEl = document.getElementById('total-tests');
+    const passedEl = document.getElementById('passed-tests');
+    const failedEl = document.getElementById('failed-tests');
+    const durationEl = document.getElementById('duration');
+
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      resultsDiv.innerHTML = '';
+
+      const startTime = performance.now();
+      const results = await runAllTests();
+      const duration = Math.round(performance.now() - startTime);
+
+      let totalTests = 0;
+      let passedTests = 0;
+      let failedTests = 0;
+
+      for (const [suiteName, suiteResults] of Object.entries(results)) {
+        const suiteDiv = document.createElement('div');
+        suiteDiv.className = 'test-suite';
+
+        const header = document.createElement('div');
+        header.className = 'test-suite-header';
+        header.textContent = suiteName;
+        suiteDiv.appendChild(header);
+
+        for (const result of suiteResults) {
+          totalTests++;
+          if (result.passed) passedTests++;
+          else failedTests++;
+
+          const testDiv = document.createElement('div');
+          testDiv.className = `test-case ${result.passed ? 'pass' : 'fail'}`;
+
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = result.name;
+          testDiv.appendChild(nameSpan);
+
+          const statusSpan = document.createElement('span');
+          statusSpan.className = `test-status ${result.passed ? 'pass' : 'fail'}`;
+          statusSpan.textContent = result.passed ? 'PASS' : 'FAIL';
+          testDiv.appendChild(statusSpan);
+
+          if (!result.passed && result.error) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'test-error';
+            errorDiv.textContent = result.error;
+            testDiv.appendChild(errorDiv);
+          }
+
+          suiteDiv.appendChild(testDiv);
+        }
+
+        resultsDiv.appendChild(suiteDiv);
+      }
+
+      totalEl.textContent = totalTests;
+      passedEl.textContent = passedTests;
+      failedEl.textContent = failedTests;
+      durationEl.textContent = `${duration}ms`;
+
+      button.disabled = false;
+    });
+
+    // Auto-run tests on load
+    window.addEventListener('load', () => {
+      button.click();
+    });
+  </script>
+</body>
+</html>
