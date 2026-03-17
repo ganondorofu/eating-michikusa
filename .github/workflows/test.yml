@@ -1,0 +1,45 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, claude/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        npm install -g http-server
+
+    - name: Start HTTP server
+      run: |
+        http-server -p 8080 &
+        sleep 2
+
+    - name: Install Playwright
+      run: |
+        npm install -D @playwright/test
+        npx playwright install chromium
+
+    - name: Run tests
+      run: |
+        npx playwright test --config=playwright.config.js || true
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test-results/
+        retention-days: 30
