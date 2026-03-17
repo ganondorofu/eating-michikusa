@@ -32,10 +32,8 @@ cat > config.js << 'EOF'
 // API キーはバックエンドのみで使用
 // フロントエンドには公開されません
 let API_KEY = null;
-
-console.log('[MICHIKUSA] セキュアモード: APIキーはサーバー側で管理されています');
 EOF
 
-echo "✅ config.js を生成しました（セキュアモード - APIキーなし）"
+echo "✅ config.js を生成しました（APIキーなし）"
 echo "🔒 API キーはバックエンドのみで安全に管理されます"
 echo "🌿 ビルドスクリプトが正常に完了しました"
