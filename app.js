@@ -766,11 +766,6 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 }
 
 async function runGourmetReview() {
-  if (typeof API_KEY === 'undefined' || !API_KEY) {
-    alert('config.js にAPIキーを設定してください。');
-    return;
-  }
-
   analyzeBtn.disabled = true;
   hideSection(previewSection);
   loadingSpinner.hidden = false;
@@ -780,11 +775,10 @@ async function runGourmetReview() {
   const s = currentScores;
 
   try {
-    const response = await fetchWithRetry('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+    const response = await fetchWithRetry('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
       },
       body: JSON.stringify({
         model: 'glm-4.6v-flash',
@@ -1037,9 +1031,9 @@ multiAnalyzeBtn.addEventListener('click', async () => {
 
 // ビジョンモデルで画像を客観的に分析してテキスト記述を返す（多視点審査の前処理）
 async function runVisionAnalysis() {
-  const response = await fetchWithRetry('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+  const response = await fetchWithRetry('/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'glm-4.6v-flash',
       stream: false,
@@ -1067,9 +1061,9 @@ ${currentDetection?.className ? `AI認識クラス: ${currentDetection.className
 
 // テキストモデル専用（ビジョン不要・多視点審査のペルソナ呼び出しに使用）
 async function callAPIText(prompt) {
-  const response = await fetchWithRetry('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+  const response = await fetchWithRetry('/api/chat', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'glm-4.7-flash',
       stream: false,
@@ -1083,11 +1077,6 @@ async function callAPIText(prompt) {
 }
 
 async function runMultiReview() {
-  if (typeof API_KEY === 'undefined' || !API_KEY) {
-    alert('config.js にAPIキーを設定してください。');
-    return;
-  }
-
   analyzeBtn.disabled = true;
   multiAnalyzeBtn.disabled = true;
   hideSection(previewSection);
@@ -1158,11 +1147,10 @@ async function runMultiReview() {
 }
 
 async function callAPISimple(prompt) {
-  const response = await fetchWithRetry('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+  const response = await fetchWithRetry('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`,
     },
     body: JSON.stringify({
       model: 'glm-4.6v-flash',
