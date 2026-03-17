@@ -1,6 +1,12 @@
 {
-  "buildCommand": "bash build.sh",
+  "buildCommand": "bash build-secure.sh",
   "outputDirectory": ".",
   "devCommand": null,
-  "framework": null
+  "framework": null,
+  "functions": {
+    "api/chat.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  }
 }

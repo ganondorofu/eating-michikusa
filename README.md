@@ -38,9 +38,20 @@
 
 ## セットアップ
 
+### 🔒 セキュリティ改善について
+
+**v2.0.0 より、APIキーを安全に管理する仕組みに変更されました**:
+- ✅ APIキーはバックエンド（Vercel Serverless Functions）でのみ管理
+- ✅ フロントエンドには露出しません
+- ✅ レート制限、ペイロードサイズ制限を実装
+
+詳細は [SECURITY.md](SECURITY.md) を参照してください。
+
+---
+
 ### クイックスタート: Vercel にデプロイ（推奨）
 
-最も簡単な方法は Vercel にデプロイすることです。環境変数で API キーを安全に管理できます。
+最も簡単かつ安全な方法は Vercel にデプロイすることです。APIキーはサーバーサイドで安全に管理されます。
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ganondorofu/eating-michikusa)
 
@@ -51,7 +62,7 @@
    - **Value**: あなたの Zhipu AI API キー（[ここから取得](https://open.bigmodel.cn/usercenter/apikeys)）
 4. **Deployments** タブから最新のデプロイを **Redeploy** して環境変数を反映
 
-これで API キーが安全に設定され、誰にも見られることなく動作します 🎉
+これでAPIキーが安全にバックエンドで管理され、誰にも見られることなく動作します 🔒🎉
 
 ---
 
@@ -64,77 +75,40 @@ git clone https://github.com/ganondorofu/eating-michikusa.git
 cd eating-michikusa
 ```
 
-#### 2. API キーを設定
+#### 2. ローカル開発環境の起動
 
-API キーは [Zhipu AI コンソール](https://open.bigmodel.cn/usercenter/apikeys) から取得できます（無料枠あり）。
-
-設定方法は4つあります（優先順位順）:
-
-##### 方法 A: 環境変数（Vercel デプロイ時）
-
-Vercel にデプロイする場合、環境変数 `ZHIPU_API_KEY` を設定すると、ビルド時に自動的に `config.js` が生成されます。
-
-##### 方法 B: config.js ファイル（ローカル開発推奨）
+**推奨**: Vercel CLI を使用（Serverless Functions が動作します）
 
 ```bash
+# Vercel CLI のインストール
+npm install -g vercel
+
+# プロジェクトのリンク
+vercel link
+
+# 環境変数の取得（Vercelプロジェクトから）
+vercel env pull .env.local
+
+# ローカルサーバーの起動
+vercel dev
+```
+
+これで `http://localhost:3000` でアクセスできます。
+
+**代替方法**: 簡易HTTPサーバー（APIキーを手動設定）
+
+⚠️ **注意**: この方法ではServerless Functionsが動作しないため、APIキーをフロントエンドに含める必要があります（開発環境のみ推奨）。
+
+```bash
+# config.js を作成
 cp config.example.js config.js
-```
+# config.js を編集してAPIキーを設定
 
-`config.js` を開き、Zhipu AI の API キーを設定してください。
-
-```js
-let API_KEY = "your-zhipu-ai-api-key-here";
-```
-
-##### 方法 C: URL パラメータ
-
-URL に直接 API キーを指定できます（開発・テスト用）:
-
-```
-http://localhost:8080/?api_key=your-zhipu-ai-api-key-here
-```
-
-⚠️ **注意**: URL パラメータはブラウザ履歴に残ります。本番環境では環境変数または config.js を使用してください。
-
-##### 方法 D: localStorage（ブラウザ保存）
-
-ブラウザの開発者コンソールで以下を実行:
-
-```js
-localStorage.setItem('MICHIKUSA_API_KEY', 'your-zhipu-ai-api-key-here');
-```
-
-この方法で設定した API キーはブラウザに永続的に保存されます。削除する場合:
-
-```js
-localStorage.removeItem('MICHIKUSA_API_KEY');
-```
-
-#### 3. 起動
-
-**方法 A: ファイルをブラウザで直接開く**（最も簡単）
-
-```
-index.html をブラウザにドラッグ＆ドロップ
-```
-
-**方法 B: ローカルサーバーで起動**（推奨 — カメラ API が使いやすい）
-
-```bash
 # Python
 python3 -m http.server 8080
 
 # Node.js
 npx serve .
-
-# どちらも http://localhost:8080 でアクセス
-```
-
-**方法 C: スマホからアクセス**（同一 LAN 内）
-
-```bash
-python3 -m http.server 8080
-# スマホから http://<PCのIPアドレス>:8080 にアクセス
 ```
 
 ---

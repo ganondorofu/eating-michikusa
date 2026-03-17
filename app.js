@@ -749,28 +749,46 @@ function stopLoadingAnimation() {
 }
 
 // ===================================================================
-// API LAYER — Zhipu AI (GLM-4.6V-Flash) multimodal
+// API LAYER — Backend Proxy (Vercel Serverless Functions)
 // ===================================================================
 
-// 429 時に指数バックオフでリトライ
-async function fetchWithRetry(url, options, maxRetries = 3) {
+// バックエンドAPI経由でZhipu AIを呼び出す（APIキーはサーバーサイドで管理）
+async function callBackendAPI(model, messages, maxRetries = 3) {
   let delay = 4000;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const res = await fetch(url, options);
-    if (res.status !== 429) return res;
-    if (attempt === maxRetries) return res; // 最終試行は呼び出し元にまかせる
-    loadingText.textContent = `混雑中... ${delay / 1000}秒後にリトライ (${attempt}/${maxRetries - 1})`;
-    await sleep(delay);
-    delay *= 2; // 4s → 8s → 16s
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: 4000,
+          stream: false,
+        }),
+      });
+
+      if (res.status !== 429) return res;
+
+      if (attempt === maxRetries) return res; // 最終試行は呼び出し元にまかせる
+
+      const data = await res.json();
+      const retryAfter = data.retryAfter || (delay / 1000);
+      loadingText.textContent = `混雑中... ${retryAfter}秒後にリトライ (${attempt}/${maxRetries - 1})`;
+      await sleep(delay);
+      delay *= 2; // 4s → 8s → 16s
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      loadingText.textContent = `接続エラー... ${delay / 1000}秒後にリトライ (${attempt}/${maxRetries - 1})`;
+      await sleep(delay);
+      delay *= 2;
+    }
   }
 }
 
 async function runGourmetReview() {
-  if (typeof API_KEY === 'undefined' || !API_KEY) {
-    alert('config.js にAPIキーを設定してください。');
-    return;
-  }
-
   analyzeBtn.disabled = true;
   hideSection(previewSection);
   loadingSpinner.hidden = false;
@@ -780,25 +798,13 @@ async function runGourmetReview() {
   const s = currentScores;
 
   try {
-    const response = await fetchWithRetry('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'glm-4.6v-flash',
-        stream: false,
-        max_tokens: 4000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: currentImageDataUrl } },
-            { type: 'text', text: buildPrompt(s, currentDetection?.className) },
-          ],
-        }],
-      }),
-    });
+    const response = await callBackendAPI('glm-4.6v-flash', [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: currentImageDataUrl } },
+        { type: 'text', text: buildPrompt(s, currentDetection?.className) },
+      ],
+    }]);
 
     if (!response.ok) {
       const errText = await response.text();
@@ -1037,29 +1043,20 @@ multiAnalyzeBtn.addEventListener('click', async () => {
 
 // ビジョンモデルで画像を客観的に分析してテキスト記述を返す（多視点審査の前処理）
 async function runVisionAnalysis() {
-  const response = await fetchWithRetry('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
-    body: JSON.stringify({
-      model: 'glm-4.6v-flash',
-      stream: false,
-      max_tokens: 600,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: currentImageDataUrl } },
-          { type: 'text', text:
-            `この植物の画像を客観的に観察し、以下の項目を箇条書きで簡潔に記述してください。評価・感想は一切含めず、観察事実のみ。
+  const response = await callBackendAPI('glm-4.6v-flash', [{
+    role: 'user',
+    content: [
+      { type: 'image_url', image_url: { url: currentImageDataUrl } },
+      { type: 'text', text:
+        `この植物の画像を客観的に観察し、以下の項目を箇条書きで簡潔に記述してください。評価・感想は一切含めず、観察事実のみ。
 - 形態：葉の形・大きさ・縁の形状・茎や枝の特徴
 - 色彩：全体の色、グラデーション、斑点・縞・変色の有無
 - 質感：表面の艶・毛・ざらつき・肉厚感
 - 状態：生育状況・鮮度・傷みの有無
 - 特徴的部位：花・実・とげ・根・その他目立つ部位
 ${currentDetection?.className ? `AI認識クラス: ${currentDetection.className}` : ''}` },
-        ],
-      }],
-    }),
-  });
+    ],
+  }]);
   if (!response.ok) throw new Error(`Vision HTTP ${response.status}: ${await response.text()}`);
   const json = await response.json();
   return json.choices?.[0]?.message?.content ?? '';
@@ -1067,27 +1064,13 @@ ${currentDetection?.className ? `AI認識クラス: ${currentDetection.className
 
 // テキストモデル専用（ビジョン不要・多視点審査のペルソナ呼び出しに使用）
 async function callAPIText(prompt) {
-  const response = await fetchWithRetry('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
-    body: JSON.stringify({
-      model: 'glm-4.7-flash',
-      stream: false,
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
+  const response = await callBackendAPI('glm-4.7-flash', [{ role: 'user', content: prompt }]);
   if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
   const json = await response.json();
   return json.choices?.[0]?.message?.content ?? '';
 }
 
 async function runMultiReview() {
-  if (typeof API_KEY === 'undefined' || !API_KEY) {
-    alert('config.js にAPIキーを設定してください。');
-    return;
-  }
-
   analyzeBtn.disabled = true;
   multiAnalyzeBtn.disabled = true;
   hideSection(previewSection);
